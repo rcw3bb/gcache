@@ -24,7 +24,7 @@ uses java.util.function.Supplier
  */
 class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<TYPE_KEY, TYPE_VALUE> {
 
-  static class SerializableException extends GCacheException {
+  public static class SerializableException extends GCacheException {
     construct(message : String) {
       super(message)
     }
@@ -125,7 +125,7 @@ class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<T
 
       validationLogics.parallelStream().filter(\ ___validation : Supplier<Boolean> -> !___validation.get()).findAny()
           .ifPresent(\ ___validation -> {
-            throw new SerializableException("Both Key and Value must be java.io.Serializable")
+            throw new SerializableException("Both Key and Value must be both java.io.Serializable")
       })
     }
   }
