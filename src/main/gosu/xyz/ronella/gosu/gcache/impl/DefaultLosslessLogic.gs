@@ -1,9 +1,7 @@
 package xyz.ronella.gosu.gcache.impl
 
 uses xyz.ronella.gosu.gcache.GCacheException
-uses xyz.ronella.gosu.gcache.ILosslessLogic
 
-uses javax.xml.ws.spi.Invoker
 uses java.io.File
 uses java.io.FileInputStream
 uses java.io.FileOutputStream
@@ -16,6 +14,7 @@ uses java.nio.file.Paths
 uses java.util.function.BiConsumer
 uses java.util.function.BiFunction
 uses java.util.function.Consumer
+uses java.util.function.Function
 uses java.util.function.Supplier
 
 /**
@@ -30,13 +29,7 @@ class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<T
     }
   }
 
-  protected var _cacheDir : String
-
-  public construct() {
-    this._cacheDir = getCacheDir()
-  }
-
-  private function getCacheDir() : String {
+  protected property get CacheDir() : String {
     var path = Optional.ofNullable(System.getenv("GCACHE_DIR")).orElseGet(\-> {
       var tmpFolder = "tmp"
       var gcacheFolder = "gcache"
@@ -53,13 +46,17 @@ class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<T
     return path
   }
 
-  private function destinationDir(code: String) : File {
-    var destDir = Paths.get(_cacheDir, {code}).toFile()
+  protected function destinationDir(code: String) : File {
+    var destDir = Paths.get(CacheDir, {code}).toFile()
     return destDir
   }
 
-  private function actualFile(destDir: File, key: Object) : File {
-    return Paths.get(destDir.AbsolutePath, {(key as String) + ".ser"}).toFile()
+  protected property get SerialExtensionName() : String {
+    return "ser"
+  }
+
+  protected function actualFile(destDir: File, key: Object) : File {
+    return Paths.get(destDir.AbsolutePath, {(key as String) + "." + SerialExtensionName}).toFile()
   }
 
   override function evictLogic() : BiConsumer<String, Map.Entry<TYPE_KEY, TYPE_VALUE>> {
@@ -118,15 +115,49 @@ class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<T
   }
 
   override function putValidationLogic() : BiConsumer<String, Map.Entry<TYPE_KEY, TYPE_VALUE>> {
-    return \ ___code, ___entry -> {
-      var validationLogics : List<Supplier<Boolean>> = {
-         \->  ___entry.getKey() typeis Serializable, \-> ___entry.getValue() typeis Serializable
+    return \ ___code : String, ___entry : Map.Entry<TYPE_KEY, TYPE_VALUE>-> {
+      var validationLogics : List<Consumer<Map.Entry<TYPE_KEY, TYPE_VALUE>>> = {
+          \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
+            if (null == ___entry1.getKey()) {
+              throw new NullPointerException("Key cannot be null")
+            }
+          },
+          \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
+            if (null == ___entry1.getValue()) {
+              throw new NullPointerException("Value cannot be null")
+            }
+          },
+          \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
+            if (!(___entry1.getKey() typeis String)) {
+              throw new RuntimeException("Key must be of type String")
+            }
+          },
+          \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
+            if (!(___entry1.Value typeis Serializable)) {
+              throw new SerializableException("Value must be Serializable")
+            }
+          }
+    }
+
+      validationLogics.parallelStream().forEach(\ ___validation : Consumer<Map.Entry<TYPE_KEY, TYPE_VALUE>> -> {
+        ___validation.accept(___entry)
+      })
+    }
+  }
+
+
+
+  override function getKeysByCode() : Function<String, Set<TYPE_KEY>> {
+    return \ ___code -> {
+      var destDir = destinationDir(___code)
+      if (!destDir.exists()) {
+        return {}
       }
 
-      validationLogics.parallelStream().filter(\ ___validation : Supplier<Boolean> -> !___validation.get()).findAny()
-          .ifPresent(\ ___validation -> {
-            throw new SerializableException("Both Key and Value must be both java.io.Serializable")
-      })
+      var keys = destDir.listFiles(\dir, name -> name?.toLowerCase()?.endsWith("." + SerialExtensionName))
+          ?.map<String>(\___file -> ___file.Name.substring(0, ___file.Name.length - 4))?.toSet() as Set<TYPE_KEY>
+
+      return keys
     }
   }
 
