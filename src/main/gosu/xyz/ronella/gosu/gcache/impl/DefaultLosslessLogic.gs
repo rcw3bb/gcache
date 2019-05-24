@@ -121,18 +121,14 @@ class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<T
             if (null == ___entry1.getKey()) {
               throw new NullPointerException("Key cannot be null")
             }
-          },
-          \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
-            if (null == ___entry1.getValue()) {
-              throw new NullPointerException("Value cannot be null")
-            }
-          },
-          \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
             if (!(___entry1.getKey() typeis String)) {
               throw new RuntimeException("Key must be of type String")
             }
           },
           \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
+            if (null == ___entry1.getValue()) {
+              throw new NullPointerException("Value cannot be null")
+            }
             if (!(___entry1.Value typeis Serializable)) {
               throw new SerializableException("Value must be Serializable")
             }

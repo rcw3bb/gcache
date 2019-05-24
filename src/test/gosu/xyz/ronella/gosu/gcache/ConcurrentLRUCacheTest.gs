@@ -233,7 +233,7 @@ class ConcurrentLRUCacheTest extends TestBase {
     })
 
     assertExceptionThrown(\-> {
-      cache.put(null as String, 4)
+      cache.put(null, 4)
     }, NullPointerException)
   }
 
