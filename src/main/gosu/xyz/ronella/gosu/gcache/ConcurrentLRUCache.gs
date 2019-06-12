@@ -69,7 +69,9 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   private function internalLosslessGet(key : Object) : TYPE_VALUE {
     var reloadKey = \-> {
       var value = _losslessLogic.getLogic().apply(_code, key)
-      this.put(key as TYPE_KEY, value)
+      if (null!=value) {
+        this.put(key as TYPE_KEY, value)
+      }
       return value
     }
     return _cache.get(key)?:reloadKey()
