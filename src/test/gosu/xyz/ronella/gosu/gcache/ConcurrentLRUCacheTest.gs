@@ -82,7 +82,9 @@ class ConcurrentLRUCacheTest extends TestBase {
       cache.put(___idx, Integer.valueOf(___idx))
     })
 
-    assertEquals(2, cache.memCacheSize())
+    cache.put("4", null as Integer)
+
+    assertEquals(3, cache.memCacheSize())
   }
 
   public function testKeysBeyondMaxSizeLossLessInMemory() {
@@ -92,7 +94,9 @@ class ConcurrentLRUCacheTest extends TestBase {
       cache.put(___idx, Integer.valueOf(___idx))
     })
 
-    assertArrayEquals({"2", "3"}.toArray(), cache.memCachedKeys().toArray())
+    cache.put("4", null as Integer)
+
+    assertArrayEquals({"2", "3", "4"}.toArray(), cache.memCachedKeys().toArray())
   }
 
   public function testValuesBeyondMaxSizeLossLessInMemory() {
@@ -102,9 +106,11 @@ class ConcurrentLRUCacheTest extends TestBase {
       cache.put(___idx, Integer.valueOf(___idx))
     })
 
-    assertArrayEquals({2, 3}.toArray(), cache.memCachedValues().toArray())
-  }
+    cache.put("4", null as Integer)
 
+    assertArrayEquals({2, 3, null}.toArray(), cache.memCachedValues().toArray())
+  }
+  
   public function testKeysBeyondMaxSizeLossLess() {
     var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
 

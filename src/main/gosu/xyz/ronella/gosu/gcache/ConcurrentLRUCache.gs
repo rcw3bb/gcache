@@ -166,16 +166,12 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
 
       return ___keys
 
-    }, \-> {
-      var ___keys = _cache.keySet()
-      ___keys.addAll(_nullValues)
-      return ___keys
-    })
+    }, \-> memCachedKeys())
   }
 
   override function values() : Collection<TYPE_VALUE> {
     return losslessLossyLogics(\-> keySet().parallelStream().map<TYPE_VALUE>(\___key -> internalGet(___key))
-        .collect(Collectors.toList<TYPE_VALUE>()), \-> _cache.Values)
+        .collect(Collectors.toList<TYPE_VALUE>()), \-> memCachedValues())
   }
 
   override function entrySet() : Set<Entry<TYPE_KEY, TYPE_VALUE>> {
@@ -198,7 +194,7 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   override function hashCode() : int {
-    return _cache.hashCode() ^ _fifo.hashCode()
+    return _cache.hashCode() ^ _fifo.hashCode() ^ _nullValues.hashCode()
   }
 
   override function putAll(map : Map<TYPE_KEY, TYPE_VALUE>) {
@@ -210,19 +206,26 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   override function size() : int {
-    return losslessLossyLogics(\-> keySet().size(), \-> _cache.size())
+    return losslessLossyLogics(\-> keySet().size(), \-> memCacheSize())
   }
 
   public function memCacheSize() : int {
-    return _cache.size()
+    return _cache.size() + _nullValues.size()
   }
 
   public function memCachedKeys() : Set<TYPE_KEY> {
-    return _cache.Keys
+    var _keys : Set<TYPE_KEY> = _cache.Keys.stream().collect(Collectors.toSet<TYPE_KEY>())
+    _keys.addAll(_nullValues)
+
+    return _keys
   }
 
   public function memCachedValues() : Collection<TYPE_VALUE> {
-    return _cache.Values
+    var nullValues : Collection<TYPE_VALUE> = _nullValues.stream().map(\ ___keys -> null as TYPE_VALUE)
+        .collect(Collectors.toList<TYPE_VALUE>())
+    nullValues.addAll(_cache.Values)
+
+    return nullValues
   }
 
   override property get Empty() : boolean {
@@ -230,15 +233,15 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   override function containsKey(key : Object) : boolean {
-    return losslessLossyLogics(\-> keySet().contains(key), \-> _cache.containsKey(key))
+    return losslessLossyLogics(\-> keySet().contains(key), \-> memCachedKeys().contains(key))
   }
 
   override function containsValue(value : Object) : boolean {
-    return losslessLossyLogics(\-> values().contains(value), \-> _cache.contains(value))
+    return losslessLossyLogics(\-> values().contains(value), \-> memCachedValues().contains(value))
   }
 
   private function internalGet(key : Object) : TYPE_VALUE {
-    return losslessLossyLogics(\-> internalLosslessGet(key), \-> _cache.get(key))
+    return losslessLossyLogics(\-> internalLosslessGet(key), \-> _nullValues.contains(key) ? null : _cache.get(key))
   }
 
   override public function get(key : Object) : TYPE_VALUE {
