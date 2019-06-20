@@ -241,7 +241,7 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   private function internalGet(key : Object) : TYPE_VALUE {
-    return losslessLossyLogics(\-> internalLosslessGet(key), \-> _nullValues.contains(key) ? null : _cache.get(key))
+    return _nullValues.contains(key) ? null : losslessLossyLogics(\-> internalLosslessGet(key), \-> _cache.get(key))
   }
 
   override public function get(key : Object) : TYPE_VALUE {
