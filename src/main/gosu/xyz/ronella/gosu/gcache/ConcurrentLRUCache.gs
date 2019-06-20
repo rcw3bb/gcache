@@ -23,6 +23,7 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   private var _maxSize : int
   private var _cache : ConcurrentHashMap<TYPE_KEY, TYPE_VALUE>
   private var _fifo : ConcurrentLinkedQueue<TYPE_KEY>
+  private var _nullValues : Set<TYPE_KEY>
   private var _evictLogic : BiConsumer<String, Map.Entry<TYPE_KEY, TYPE_VALUE>>
   private var _lossless : boolean
   private var _code : String
@@ -37,6 +38,7 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
     this._cache = new ConcurrentHashMap<TYPE_KEY, TYPE_VALUE>(this._maxSize)
     this._fifo = new ConcurrentLinkedQueue<TYPE_KEY>()
     this._evictLogic = evictLogic
+    this._nullValues = new HashSet<TYPE_KEY>()
   }
 
   public construct(code : String, maxSize : int, losslessLogic : ILosslessLogic<TYPE_KEY, TYPE_VALUE>) {
@@ -51,7 +53,6 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
     this._losslessLogic = losslessLogic
     this._evictLogic = this._losslessLogic.evictLogic()
     clear()
-
   }
 
   public construct(code : String, maxSize : int) {
@@ -83,31 +84,48 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
       return null
     }, \-> null)
 
+    var returnValue : TYPE_VALUE
+
+    _nullValues.remove(key)
     _fifo.remove(key)
 
-    while (_fifo.size() >= _maxSize) {
-      using (LOCK_INSTANCE) {
-        var oldestKey = _fifo.poll()
-        if (null != oldestKey) {
-          var oldestValue = _cache.get(oldestKey)
-          if (null != oldestValue) {
-            var entryToRemove = new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(oldestKey, oldestValue)
-            _evictLogic.accept(_code, entryToRemove)
-            _cache.remove(oldestKey)
+    if (value==null) {
+      _cache.remove(key)
+      _nullValues.add(key)
+      returnValue = value
+    }
+    else {
+      while (_fifo.size() >= _maxSize) {
+        using (LOCK_INSTANCE) {
+          var oldestKey = _fifo.poll()
+          if (null != oldestKey) {
+            var oldestValue = _cache.get(oldestKey)
+            if (null != oldestValue) {
+              var entryToRemove = new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(oldestKey, oldestValue)
+              _evictLogic.accept(_code, entryToRemove)
+              _cache.remove(oldestKey)
+            }
           }
         }
       }
+      returnValue = _cache.put(key, value)
     }
+
     _fifo.add(key)
 
-    return _cache.put(key, value)
+    return returnValue
   }
 
   override function remove(key : Object) : TYPE_VALUE {
     using (LOCK_INSTANCE) {
       _fifo.remove(key)
-      var cacheRemove = \-> _cache.remove(key)
-      return losslessLossyLogics(\-> cacheRemove()?:_losslessLogic.removeLogic().apply(_code, key), cacheRemove)
+
+      if (!_nullValues.remove(key)) {
+        var cacheRemove = \-> _cache.remove(key)
+        return losslessLossyLogics(\-> cacheRemove()?:_losslessLogic.removeLogic().apply(_code, key), cacheRemove)
+      }
+
+      return null
     }
   }
 
@@ -122,12 +140,13 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
         _losslessLogic.clearLogic().accept(_code)
         return null
       }, cacheClear)
-
+      _nullValues.clear()
       _fifo.clear()
     }
   }
 
   override function keySet() : Set<TYPE_KEY> {
+
     return losslessLossyLogics(\-> {
 
       var ___keys = _cache.Keys?.map<TYPE_KEY>(\ ___key -> (___key as TYPE_KEY))?.toSet()
@@ -143,9 +162,15 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
         }
       }
 
+      ___keys.addAll(_nullValues)
+
       return ___keys
 
-    }, \-> _cache.keySet())
+    }, \-> {
+      var ___keys = _cache.keySet()
+      ___keys.addAll(_nullValues)
+      return ___keys
+    })
   }
 
   override function values() : Collection<TYPE_VALUE> {
@@ -155,9 +180,17 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
 
   override function entrySet() : Set<Entry<TYPE_KEY, TYPE_VALUE>> {
     return losslessLossyLogics(\-> keySet().parallelStream()
-        .map<Entry<TYPE_KEY, TYPE_VALUE>>(\___key ->
-            new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(___key, internalGet(___key))
-        ).collect(Collectors.toSet<Entry<TYPE_KEY, TYPE_VALUE>>()), \-> _cache.entrySet())
+        .map<Entry<TYPE_KEY, TYPE_VALUE>>(\___key -> new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(___key, internalGet(___key)))
+          .collect(Collectors.toSet<Entry<TYPE_KEY, TYPE_VALUE>>())
+        , \-> {
+          var _nullEntrySet = _nullValues.stream().map<Entry<TYPE_KEY, TYPE_VALUE>>(
+              \ ___key -> new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(___key, null as TYPE_VALUE)
+          ).collect(Collectors.toSet<Entry<TYPE_KEY, TYPE_VALUE>>())
+
+          _nullEntrySet.addAll(_cache.entrySet())
+          return _nullEntrySet
+        }
+    )
   }
 
   override function equals(o : Object) : boolean {
@@ -209,11 +242,23 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   override public function get(key : Object) : TYPE_VALUE {
-    var value = internalGet(key)
 
-    if (null != value) {
+    var value : TYPE_VALUE
+
+    var updateFifo = \-> {
       _fifo.remove(key)
       _fifo.add(key as TYPE_KEY)
+    }
+
+    if (_nullValues.contains(key)) {
+      updateFifo()
+      value = null
+    }
+    else {
+      value = internalGet(key)
+      if (null != value) {
+        updateFifo()
+      }
     }
 
     return value

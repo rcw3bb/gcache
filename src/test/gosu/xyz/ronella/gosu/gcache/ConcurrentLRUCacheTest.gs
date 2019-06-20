@@ -237,6 +237,95 @@ class ConcurrentLRUCacheTest extends TestBase {
     }, NullPointerException)
   }
 
+  public function testSizeWithNullValues() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", null as Integer)
+
+    assertEquals(4, cache.size())
+  }
+
+  public function testSizeWithNullValuesWithTheSameKeys() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", null as Integer)
+    cache.put("4", null as Integer)
+
+    assertEquals(4, cache.size())
+  }
+
+  public function testWithNullValuesOverridden() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", null as Integer)
+    cache.put("4", 44)
+
+    assertEquals(44, cache.get("4"))
+  }
+
+  public function testWithValueOverriddenWithNull() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", 44)
+    cache.put("4", null as Integer)
+
+    assertNull(cache.get("4"))
+  }
+
+  public function testWithNullValueCount() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", null as Integer)
+
+    assertEquals(4, cache.Values.Count)
+  }
+
+  public function testKeySetWithNullValueCount() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", null as Integer)
+
+    assertEquals(4, cache.Keys.Count)
+  }
+
+  public function testKeyWithNullValue() {
+    var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
+
+    (1..3).map(\ ___idx -> String.valueOf(___idx)).each(\___idx -> {
+      cache.put(___idx, Integer.valueOf(___idx))
+    })
+
+    cache.put("4", null as Integer)
+    cache.remove("4")
+
+    assertEquals(3, cache.size())
+  }
+
+
   public function testNullValue() {
     var cache = new ConcurrentLRUCache<String, Integer>("test", 2);
 
@@ -244,9 +333,9 @@ class ConcurrentLRUCacheTest extends TestBase {
       cache.put(___idx, Integer.valueOf(___idx))
     })
 
-    assertExceptionThrown(\-> {
-      cache.put("4", null as Integer)
-    }, NullPointerException)
+    cache.put("4", null as Integer)
+
+    assertNull(cache.get(4))
   }
 
 }

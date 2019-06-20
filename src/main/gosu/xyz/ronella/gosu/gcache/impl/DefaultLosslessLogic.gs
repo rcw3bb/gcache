@@ -15,7 +15,6 @@ uses java.util.function.BiConsumer
 uses java.util.function.BiFunction
 uses java.util.function.Consumer
 uses java.util.function.Function
-uses java.util.function.Supplier
 
 /**
  * @author Ron Webb
@@ -126,22 +125,17 @@ class DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> extends AbstractLosslessLogic<T
             }
           },
           \ ___entry1 : Map.Entry<TYPE_KEY, TYPE_VALUE> -> {
-            if (null == ___entry1.getValue()) {
-              throw new NullPointerException("Value cannot be null")
-            }
-            if (!(___entry1.Value typeis Serializable)) {
+            if (null!==___entry1.Value && !(___entry1.Value typeis Serializable)) {
               throw new SerializableException("Value must be Serializable")
             }
           }
-    }
+      }
 
       validationLogics.parallelStream().forEach(\ ___validation : Consumer<Map.Entry<TYPE_KEY, TYPE_VALUE>> -> {
         ___validation.accept(___entry)
       })
     }
   }
-
-
 
   override function getKeysByCode() : Function<String, Set<TYPE_KEY>> {
     return \ ___code -> {
