@@ -2,6 +2,8 @@ import java.nio.file.Paths
 
 plugins {
     id "org.gosu-lang.gosu" version "0.3.10"
+    id "com.bmuschko.nexus" version "2.3.1"
+    id "io.codearte.nexus-staging" version "0.21.1"
 }
 
 group 'xyz.ronella.gosu'
@@ -15,6 +17,53 @@ repositories {
             password "${artifactoryPassword}"
         }
     }
+}
+
+modifyPom {
+    project {
+        name 'GCache'
+        description 'A simple gosu implementation of concurrent LRU Map.'
+        url 'https://github.com/rcw3bb/gcache'
+        inceptionYear '2020'
+
+        scm {
+            url 'https://github.com/rcw3bb/gcache'
+            connection 'https://github.com/rcw3bb/gcache.git'
+            developerConnection 'https://github.com/rcw3bb/gcache.git'
+        }
+
+        licenses {
+            license {
+                name 'MIT License'
+                url 'https://github.com/rcw3bb/gcache/blob/master/LICENSE.md'
+                distribution 'repo'
+            }
+        }
+
+        developers {
+            developer {
+                id 'rcw3bb'
+                name 'Ronaldo Webb'
+                email 'ronaldo.c.webb@gmail.com'
+            }
+        }
+    }
+}
+
+extraArchive {
+    sources = true
+    tests = true
+    javadoc = true
+}
+
+nexus {
+    sign = true
+    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+}
+
+nexusStaging {
+    stagingProfileId = "33650220e7857c"
 }
 
 dependencies {
