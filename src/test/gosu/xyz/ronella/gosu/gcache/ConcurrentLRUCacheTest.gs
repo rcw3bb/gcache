@@ -1,17 +1,14 @@
 package xyz.ronella.gosu.gcache
 
-uses gw.api.system.server.Runlevel
-uses gw.testharness.RunLevel
-uses gw.testharness.TestBase
 uses xyz.ronella.gosu.gcache.impl.DefaultLosslessLogic
+uses gw.test.TestClass
 
 /**
  *
  * @author Ron Webb
  * @since 2019-05-18
  */
-@RunLevel(Runlevel.NONE)
-class ConcurrentLRUCacheTest extends TestBase {
+class ConcurrentLRUCacheTest extends TestClass {
 
   public function testHittingEvictionLogic() {
     var isHit = false
@@ -199,7 +196,7 @@ class ConcurrentLRUCacheTest extends TestBase {
   }
 
   public function testPutValidation() {
-    assertExceptionThrown(\-> {
+    assertCausesException(\-> {
       var dummyClass = new DummyClass()
       var cache = new ConcurrentLRUCache<String, DummyClass>("test", 2);
       cache.put("Test", dummyClass)
@@ -238,7 +235,7 @@ class ConcurrentLRUCacheTest extends TestBase {
       cache.put(___idx, Integer.valueOf(___idx))
     })
 
-    assertExceptionThrown(\-> {
+    assertCausesException(\-> {
       cache.put(null, 4)
     }, NullPointerException)
   }

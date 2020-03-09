@@ -23,5 +23,6 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.gosu-lang.gosu', name: 'gosu-core-api', version: '1.13.29'
+    compile group: 'org.gosu-lang.gosu', name: 'gosu-core', version: '1.13.29'
+    testCompile group: 'org.gosu-lang.gosu', name: 'gosu-test', version: '1.13.29'
 }

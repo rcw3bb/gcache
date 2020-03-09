@@ -10,7 +10,7 @@ uses java.util.function.Supplier
 uses java.util.stream.Collectors
 
 /**
- *
+ * Concurrent Caching Logic
  *
  * @param <TYPE_KEY>
  * @param <TYPE_VALUE>
@@ -79,24 +79,23 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   override public function put(key : TYPE_KEY, value : TYPE_VALUE) : TYPE_VALUE {
-    losslessLossyLogics(\-> {
-      _losslessLogic.putValidationLogic().accept(_code, new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(key, value))
-      return null
-    }, \-> null)
-
     var returnValue : TYPE_VALUE
 
-    _nullValues.remove(key)
-    _fifo.remove(key)
+    using (LOCK_INSTANCE) {
+      losslessLossyLogics(\-> {
+        _losslessLogic.putValidationLogic().accept(_code, new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(key, value))
+        return null
+      }, \-> null)
 
-    if (value==null) {
-      _cache.remove(key)
-      _nullValues.add(key)
-      returnValue = value
-    }
-    else {
-      while (_fifo.size() >= _maxSize) {
-        using (LOCK_INSTANCE) {
+      _nullValues.remove(key)
+      _fifo.remove(key)
+
+      if (value == null) {
+        _cache.remove(key)
+        _nullValues.add(key)
+        returnValue = value
+      } else {
+        while (_fifo.size() >= _maxSize) {
           var oldestKey = _fifo.poll()
           if (null != oldestKey) {
             var oldestValue = _cache.get(oldestKey)
@@ -107,11 +106,11 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
             }
           }
         }
+        returnValue = _cache.put(key, value)
       }
-      returnValue = _cache.put(key, value)
-    }
 
-    _fifo.add(key)
+      _fifo.add(key)
+    }
 
     return returnValue
   }
@@ -249,8 +248,10 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
     var value : TYPE_VALUE
 
     var updateFifo = \-> {
-      _fifo.remove(key)
-      _fifo.add(key as TYPE_KEY)
+      using (LOCK_INSTANCE) {
+        _fifo.remove(key)
+        _fifo.add(key as TYPE_KEY)
+      }
     }
 
     if (_nullValues.contains(key)) {
