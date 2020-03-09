@@ -1,3 +1,5 @@
+import java.nio.file.Paths
+
 plugins {
     id "org.gosu-lang.gosu" version "0.3.10"
 }
@@ -26,3 +28,30 @@ dependencies {
     compile group: 'org.gosu-lang.gosu', name: 'gosu-core', version: '1.13.29'
     testCompile group: 'org.gosu-lang.gosu', name: 'gosu-test', version: '1.13.29'
 }
+
+task preparePackage(dependsOn: [build]) {
+    doLast {
+        def srcDir = sourceSets.main.gosu.sourceDirectories.asPath
+        def destDir = Paths.get(buildDir.absolutePath, "gosu")
+
+        copy {
+            from srcDir
+            into destDir
+        }
+    }
+}
+
+task jarGosu(dependsOn: [jar]) {
+    doLast {
+        def srcDir = Paths.get(buildDir.absolutePath, "gosu")
+        def jarFile = "${project.name}-${version}-gosu.jar"
+        def outputFile = Paths.get(buildDir.absolutePath, "gosu-libs", jarFile)
+
+        ant.zip(destfile: outputFile) {
+            fileset(dir: srcDir)
+        }
+    }
+}
+
+compileGosu.finalizedBy(preparePackage)
+jar.finalizedBy(jarGosu)
