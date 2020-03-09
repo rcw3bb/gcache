@@ -9,17 +9,10 @@ version '1.0-SNAPSHOT'
 
 repositories {
     maven {
-        url 'https://repo.ronella.xyz/archiva/repository/internal/'
+        url 'https://repo.ronella.xyz/artifactory/java-central/'
         credentials {
-            username "${archivaUsername}"
-            password "${archivaPassword}"
-        }
-    }
-    maven {
-        url 'https://repo.ronella.xyz/archiva/repository/snapshots/'
-        credentials {
-            username "${archivaUsername}"
-            password "${archivaPassword}"
+            username "${artifactoryUsername}"
+            password "${artifactoryPassword}"
         }
     }
 }
