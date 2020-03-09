@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'xyz.ronella.gosu'
-version '1.0.0'
+version '1.0.1-SNAPSHOT'
 
 repositories {
     maven {
@@ -71,7 +71,7 @@ dependencies {
     testCompile group: 'org.gosu-lang.gosu', name: 'gosu-test', version: '1.13.29'
 }
 
-task preparePackage(dependsOn: [build]) {
+task preparePackage(dependsOn: [jar]) {
     doLast {
         def srcDir = sourceSets.main.gosu.sourceDirectories.asPath
         def destDir = Paths.get(buildDir.absolutePath, "gosu")
@@ -83,17 +83,29 @@ task preparePackage(dependsOn: [build]) {
     }
 }
 
-task jarGosu(dependsOn: [jar]) {
+task jarGosu(dependsOn: [preparePackage]) {
     doLast {
         def srcDir = Paths.get(buildDir.absolutePath, "gosu")
-        def jarFile = "${project.name}-${version}-gosu.jar"
-        def outputFile = Paths.get(buildDir.absolutePath, "gosu-libs", jarFile)
+        def jarFilename ="${project.name}-${version}"
+        def jarGosuFile = "${jarFilename}-gosu.jar"
+        def javaLibsDir = Paths.get(buildDir.absolutePath, "java-libs")
+        def gosuLibsDir = Paths.get(buildDir.absolutePath, "gosu-libs")
+        def outputGosuFile = Paths.get(gosuLibsDir.toFile().absolutePath, jarGosuFile)
+        def libsDir = Paths.get(buildDir.absolutePath, "libs")
+        def outputFile = Paths.get(libsDir.toFile().absolutePath, "${jarFilename}.jar")
 
-        ant.zip(destfile: outputFile) {
+        ant.zip(destfile: outputGosuFile) {
             fileset(dir: srcDir)
         }
+
+        ant.move file: outputFile, toDir: javaLibsDir
+
+        copy {
+            from gosuLibsDir
+            into libsDir
+        }
+
     }
 }
 
-compileGosu.finalizedBy(preparePackage)
 jar.finalizedBy(jarGosu)
