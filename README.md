@@ -6,11 +6,11 @@ A simple gosu implementation of concurrent LRU Map.
 
 | Constructors                                                 |
 | ------------------------------------------------------------ |
-| **ConcurrentLRUCache**(code : String, maxSize : int, evictLogic : BiConsumer<String, Map.Entry<TYPE_KEY, TYPE_VALUE>>) |
-| **ConcurrentLRUCache**(code : String, maxSize : int, losslessLogic : ILosslessLogic<TYPE_KEY, TYPE_VALUE>) |
-| **ConcurrentLRUCache**(code : String, maxSize : int)         |
-| **ConcurrentLRUCache**(maxSize : int, evictLogic : BiConsumer<String,Map.Entry<TYPE_KEY, TYPE_VALUE>>) |
-| **ConcurrentLRUCache**(maxSize : int)                        |
+| **ConcurrentLRUCache&lt;TYPE_KEY, TYPE_VALUE&gt;**(code : String, maxSize : int, evictLogic : BiConsumer&lt;String, Map.Entry&lt;TYPE_KEY, TYPE_VALUE&gt;&gt;) |
+| **ConcurrentLRUCache&lt;TYPE_KEY, TYPE_VALUE&gt;**(code : String, maxSize : int, losslessLogic : ILosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;) |
+| **ConcurrentLRUCache&lt;TYPE_KEY, TYPE_VALUE&gt;**(code : String, maxSize : int) |
+| **ConcurrentLRUCache&lt;TYPE_KEY, TYPE_VALUE&gt;**(maxSize : int, evictLogic : BiConsumer&lt;String,Map.Entry&lt;TYPE_KEY, TYPE_VALUE&gt;&gt;) |
+| **ConcurrentLRUCache&lt;TYPE_KEY, TYPE_VALUE&gt;**(maxSize : int)  |
 
 #### Constructor Parameters
 
@@ -18,20 +18,20 @@ A simple gosu implementation of concurrent LRU Map.
 | ------------- | --------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
 | code          | String                                              | default                                    | The code that groups the Map.Entry.                          |
 | maxSize       | int                                                 |                                            | The maximum key count of a particular code group in memory.  Anything beyond this limit will trigger either the evictLogic or the losslessLogic. |
-| evictLogic    | BiConsumer<String, Map.Entry<TYPE_KEY, TYPE_VALUE>> |                                            | A custom eviction logic.                                     |
-| losslessLogic | ILosslessLogic<TYPE_KEY, TYPE_VALUE>                | DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE> | An implementation of ILosslessLogic.                         |
+| evictLogic    | BiConsumer&lt;String, Map.Entry&lt;TYPE_KEY, TYPE_VALUE&gt;&gt; |                                            | A custom eviction logic.                                     |
+| losslessLogic | ILosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;                | DefaultLosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt; | An implementation of ILosslessLogic.                         |
 
 ## Proprietary Methods
 
 | Method                                                     | Description                          |
 | ---------------------------------------------------------- | ------------------------------------ |
 | public function memCacheSize() : int                       | Returns the size of cache in memory. |
-| public function memCachedKeys() : Set<TYPE_KEY>            | Returns the keys in memory.          |
-| public function memCachedValues() : Collection<TYPE_VALUE> | Returns the values in memory.        |
+| public function memCachedKeys() : Set&lt;TYPE_KEY&gt;            | Returns the keys in memory.          |
+| public function memCachedValues() : Collection&lt;TYPE_VALUE&gt; | Returns the values in memory.        |
 
-## DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE>
+## DefaultLosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;
 
-An implementation of **ILosslessLogic<TYPE_KEY, TYPE_VALUE>** that only accepts **String as the key** and **Value that must be tag as Serializable**. The work of this class will only start if the **maxSize** key allocated for memory storage was exceeded. If the key counts is beyond the maxSize indicated, all the key entries that are not used will be serialized to the location defined by the environment variable **GCACHE_DIR** or if it is not present to your **<TMP_DIR>\gcache directory**. The extension name of a serialized objects is **ser**. Knowing this, it is important that during the startup of the application all of the **instance of ConcurrentLRUCache per code must be cleared** *(i.e. calling its clear method)* or **simply empty the location of the GCACHE_DIR or gcache directory**.
+An implementation of **ILosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;** that only accepts **String as the key** and **Value that must be tag as Serializable**. The work of this class will only start if the **maxSize** key allocated for memory storage was exceeded. If the key counts is beyond the maxSize indicated, all the key entries that are not used will be serialized to the location defined by the environment variable **GCACHE_DIR** or if it is not present to your **&lt;TMP_DIR&gt;\gcache directory**. The extension name of a serialized objects is **ser**. Knowing this, it is important that during the startup of the application all of the **instance of ConcurrentLRUCache per code must be cleared** *(i.e. calling its clear method)* or **simply empty the location of the GCACHE_DIR or gcache directory**.
 
 ## Usage
 
