@@ -56,7 +56,7 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
   }
 
   public construct(code : String, maxSize : int) {
-    this(code, maxSize, new DefaultLosslessLogic<TYPE_VALUE, TYPE_VALUE>() as ILosslessLogic<TYPE_KEY, TYPE_VALUE>)
+    this(code, maxSize, new DefaultLosslessLogic<TYPE_KEY, TYPE_VALUE>() as ILosslessLogic<TYPE_KEY, TYPE_VALUE>)
   }
 
   public construct(maxSize : int, evictLogic : BiConsumer<String,Map.Entry<TYPE_KEY, TYPE_VALUE>>) {
