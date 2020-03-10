@@ -29,13 +29,26 @@ A simple gosu implementation of concurrent LRU Map.
 | public function memCachedKeys() : Set&lt;TYPE_KEY&gt;            | Returns the keys in memory.          |
 | public function memCachedValues() : Collection&lt;TYPE_VALUE&gt; | Returns the values in memory.        |
 
-## DefaultLosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;
+## DefaultLosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt; Class
 
-An implementation of **ILosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;** that only accepts **String as the key** and **Value that must be tag as Serializable**. The work of this class will only start if the **maxSize** key allocated for memory storage was exceeded. If the key counts is beyond the maxSize indicated, all the key entries that are not used will be serialized to the location defined by the environment variable **GCACHE_DIR** or if it is not present to your **&lt;TMP_DIR&gt;\gcache directory**. The extension name of a serialized objects is **ser**. Knowing this, it is important that during the startup of the application all of the **instance of ConcurrentLRUCache per code must be cleared** *(i.e. calling its clear method)* or **simply empty the location of the GCACHE_DIR or gcache directory**.
+An implementation of **ILosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;** that only accepts **String as the key** and **Value that must be tag as Serializable**. The work of this class will only start if the **maxSize** key allocated for memory storage was exceeded. If the key counts is beyond the maxSize indicated, all the key entries that are not used will be serialized to the location defined by the environment variable **GCACHE_DIR** or if it is not present to your **&lt;TMP_DIR&gt;\gcache directory**. The extension name of a serialized objects is **ser**.
 
 ## Usage
 
-Once an instance of **ConcurrentLRUCache** was created, use it like you are using an instance of a Map. 
+1. Add the following **maven** dependency to your **gosu** project:
+
+   | Property    | Value            |
+   |-------------|------------------|
+   | Group ID    | xyz.ronella.gosu |
+   | Artifact ID | gcache           |
+   | Version     | 1.0.1            |
+
+   > Using gradle, this can be added as a dependency entry like the following:
+   >
+   > ```groovy
+   > compile group: 'xyz.ronella.gosu', name: 'gcache', version: '1.0.1'
+   > ```
+2. On your code, once an instance of **ConcurrentLRUCache** was created, use it like you are using an instance of a Map. 
 
 ## License
 
