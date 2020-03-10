@@ -101,10 +101,12 @@ task jarGosu(dependsOn: [preparePackage]) {
         ant.move file: outputFile, toDir: javaLibsDir
 
         copy {
-            from gosuLibsDir
+            from outputGosuFile
             into libsDir
+            rename { filename ->
+                filename.replace jarGosuFile, "${jarFilename}.jar"
+            }
         }
-
     }
 }
 
