@@ -38,15 +38,15 @@ An implementation of **ILosslessLogic&lt;TYPE_KEY, TYPE_VALUE&gt;** that only ac
 1. Add the following **maven** dependency to your **gosu** project:
 
    | Property    | Value            |
-   |-------------|------------------|
+   | ----------- | ---------------- |
    | Group ID    | xyz.ronella.gosu |
    | Artifact ID | gcache           |
-   | Version     | 1.0.1            |
+   | Version     | 1.1.0            |
 
    > Using gradle, this can be added as a dependency entry like the following:
    >
    > ```groovy
-   > compile group: 'xyz.ronella.gosu', name: 'gcache', version: '1.0.1'
+   > compile group: 'xyz.ronella.gosu', name: 'gcache', version: '1.1.0'
    > ```
 2. On your code, once an instance of **ConcurrentLRUCache** was created, use it like you are using an instance of a Map. 
 
