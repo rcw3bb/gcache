@@ -85,7 +85,7 @@ class ConcurrentLRUCache<TYPE_KEY, TYPE_VALUE> implements Map<TYPE_KEY, TYPE_VAL
       losslessLossyLogics(\-> {
         _losslessLogic.putValidationLogic().accept(_code, new AbstractMap.SimpleEntry<TYPE_KEY, TYPE_VALUE>(key, value))
         return null
-      }, \-> null)
+      }, \-> {return null})
 
       _nullValues.remove(key)
       _fifo.remove(key)
